@@ -8,36 +8,30 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.app.cattlemanagement.R;
 import com.app.cattlemanagement.activities.auth.AuthLoginActivity;
-import com.app.cattlemanagement.activities.buyer.BuyerDashboard;
+import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class FarmerDashboard extends AppCompatActivity {
+    MaterialCardView animal , crdFeedAnimal;
+    MaterialCardView liveStock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_farmer_dashboard);
+        InitView();
+
+        animal.setOnClickListener(view -> startActivity(new Intent(this, AnimalsActivity.class)));
+        liveStock.setOnClickListener(view -> startActivity(new Intent(this, LiveStockRecordActivity.class)));
+        crdFeedAnimal.setOnClickListener(view -> startActivity(new Intent(this, FeedRecord.class)));
     }
 
-    public void sellCattle(View view) {
-
+    private void InitView() {
+        animal = findViewById(R.id.crdAnimal);
+        crdFeedAnimal = findViewById(R.id.crdFeedAnimal);
+        liveStock = findViewById(R.id.cardViewLiveStock);
     }
 
-    public void updateCattleInfo(View view) {
-
-    }
-
-    public void addDiary(View view) {
-
-    }
-
-    public void checkMilk(View view) {
-
-    }
-
-    public void feedManagement(View view) {
-
-    }
 
     public void logout(View view) {
         FirebaseAuth.getInstance().signOut();
@@ -45,8 +39,5 @@ public class FarmerDashboard extends AppCompatActivity {
         finish();
     }
 
-    public void switchToBuyer(View view) {
-        startActivity(new Intent(this, BuyerDashboard.class));
-        finish();
-    }
+
 }

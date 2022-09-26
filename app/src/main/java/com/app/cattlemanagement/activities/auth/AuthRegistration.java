@@ -2,49 +2,45 @@ package com.app.cattlemanagement.activities.auth;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.app.cattlemanagement.R;
-import com.app.cattlemanagement.activities.buyer.BuyerDashboard;
-import com.app.cattlemanagement.info.Info;
-import com.app.cattlemanagement.models.User;
-import com.app.cattlemanagement.singletons.CurrentUserSingleton;
+import com.app.cattlemanagement.data.remote.FirebaseRegistration;
 import com.app.cattlemanagement.utils.DialogUtils;
 import com.app.cattlemanagement.utils.Utils;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputLayout;
 
-import java.util.Objects;
-
-public class AuthRegistration extends AppCompatActivity implements Info {
+public class AuthRegistration extends AppCompatActivity {
 
     public static Activity context;
 
     public static String strEtPassword;
     boolean isPassVisible = false;
-
+    AutoCompleteTextView feedRole;
     EditText etEmail;
     EditText etPhone;
     EditText etPassword;
     EditText etConfirmPassword;
-    EditText etFirstName;
-    EditText etLastName;
+    EditText etUserName;
+    TextInputLayout selectedRole;
 
+    String strUserName;
 
-    String strEtFirstName;
-    String strEtLastName;
     String strEtEmail;
     String strEtPhone;
     String strEtConfirmPassword;
-
+    String relationStatus = "";
+    FirebaseRegistration firebaseRegistration;
     Dialog dgLoading;
 
     @Override
@@ -53,8 +49,25 @@ public class AuthRegistration extends AppCompatActivity implements Info {
         setContentView(R.layout.activity_registration);
         context = this;
         initViews();
+        firebaseRegistration = new FirebaseRegistration();
+        handleDropdownMenu();
+        /**
+         * init diaglogue loading
+         */
         dgLoading = new Dialog(this);
         DialogUtils.initLoadingDialog(dgLoading);
+    }
+
+    private void handleDropdownMenu() {
+        String[] getRole = {"Farmer", "Buyer"};
+        ArrayAdapter roleAdapter = new ArrayAdapter(this, R.layout.marketing_list, getRole);
+        feedRole.setAdapter(roleAdapter);
+        ((AutoCompleteTextView) selectedRole.getEditText()).setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                relationStatus = roleAdapter.getItem(position).toString();
+            }
+        });
     }
 
     public void showPassword(View view) {
@@ -73,6 +86,7 @@ public class AuthRegistration extends AppCompatActivity implements Info {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        firebaseRegistration = null;
     }
 
     @Override
@@ -81,8 +95,7 @@ public class AuthRegistration extends AppCompatActivity implements Info {
     }
 
     private void castStrings() {
-        strEtFirstName = etFirstName.getText().toString();
-        strEtLastName = etLastName.getText().toString();
+        strUserName = etUserName.getText().toString();
         strEtEmail = etEmail.getText().toString();
         strEtPhone = etPhone.getText().toString();
         strEtPassword = etPassword.getText().toString();
@@ -94,70 +107,59 @@ public class AuthRegistration extends AppCompatActivity implements Info {
         etPhone = findViewById(R.id.et_phone);
         etPassword = findViewById(R.id.et_pass);
         etConfirmPassword = findViewById(R.id.et_confirm_pass);
-        etFirstName = findViewById(R.id.et_first_name);
-        etLastName = findViewById(R.id.et_last_name);
+        etUserName = findViewById(R.id.et_first_name);
+        feedRole = findViewById(R.id.select_relation);
+        selectedRole = findViewById(R.id.textInputLayout);
     }
 
+    /**
+     * On Click Listener for <- Button
+     *
+     * @param view
+     */
     public void back(View view) {
         finish();
     }
 
+    /**
+     * On Click Listener for signUp Button
+     *
+     * @param view
+     */
     public void SignUp(View view) {
+
         castStrings();
-        if (!Utils.validEt(etFirstName, strEtFirstName))
-            return;
-
-        if (!Utils.validEt(etLastName, strEtLastName))
-            return;
-
-        if (!Utils.validEt(etEmail, strEtEmail))
-            return;
-
-        if (!Utils.validEt(etPhone, strEtPhone))
-            return;
-
-        if (!strEtPassword.equals(strEtConfirmPassword)) {
-            Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+        if (!Utils.validateUserName(etUserName, strUserName)) {
             return;
         }
 
-        String id = "0";
-        User userModel = new User(id, strEtFirstName, strEtLastName, "-",
-                strEtPhone, "-", "-");
+        if (!Utils.validateEmail(etEmail, strEtEmail))
+            return;
 
+        if (!Utils.validatePhoneNumber(etPhone, strEtPhone))
+            return;
 
-        initAuth(userModel);
-    }
+        if (!Utils.validatePassword(etPassword, strEtPassword))
+            return;
 
-    private void initAuth(User userModel) {
+        if (!strEtPassword.equals(strEtConfirmPassword)) {
+            showToast("Password do not match.");
+            return;
+        }
+        if (relationStatus.isEmpty()) {
+            showToast("Please Select Your Role");
+            return;
+        }
         dgLoading.show();
-        FirebaseAuth.getInstance()
-                .createUserWithEmailAndPassword(strEtEmail, strEtConfirmPassword)
-                .addOnCompleteListener(task -> {
-                    dgLoading.dismiss();
-                    if (task.isSuccessful()) {
-                        userModel.setId(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid());
-                        initData(userModel);
-                    } else
-                        Toast.makeText(AuthRegistration.this, "An Error Occurred", Toast.LENGTH_SHORT).show();
-                });
+        firebaseRegistration.registerUser(strEtEmail, strUserName, strEtPassword, this, dgLoading);
+
+
     }
 
-    private void initData(User userModel) {
-        dgLoading.show();
-        FirebaseDatabase.getInstance().getReference()
-                .child(NODE_USERS)
-                .child(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid())
-                .setValue(userModel)
-                .addOnCompleteListener(task -> {
-                    dgLoading.dismiss();
-                    if (task.isSuccessful()) {
-                        CurrentUserSingleton.setInstance(userModel);
-                        startActivity(new Intent(AuthRegistration.this, BuyerDashboard.class));
-                        finish();
 
-                    } else
-                        Toast.makeText(AuthRegistration.this, "ERROR OCCURRED", Toast.LENGTH_SHORT).show();
-                });
+    public void showToast(String message) {
+        Snackbar.make(this, findViewById(R.id.et_user_name), message, Snackbar.LENGTH_LONG).
+                setTextColor(getResources().getColor(R.color.redish)).show();
     }
+
 }

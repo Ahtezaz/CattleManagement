@@ -1,40 +1,32 @@
 package com.app.cattlemanagement.activities.auth;
 
+import static com.app.cattlemanagement.utils.Constant.BUYER;
+import static com.app.cattlemanagement.utils.Constant.FARM_OWNER;
+import static com.app.cattlemanagement.utils.Constant.GET_ROLE;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.app.cattlemanagement.R;
-import com.app.cattlemanagement.activities.buyer.BuyerDashboard;
-import com.app.cattlemanagement.info.Info;
-import com.app.cattlemanagement.models.User;
-import com.app.cattlemanagement.singletons.CurrentUserSingleton;
+import com.app.cattlemanagement.data.remote.FirebaseLogin;
 import com.app.cattlemanagement.utils.DialogUtils;
 import com.app.cattlemanagement.utils.Utils;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-
-import java.util.Objects;
+import com.google.android.material.snackbar.Snackbar;
 
 /**
  * Email = cattlefyp@gmail.com
  * Password = finalyearproject
  */
 
-public class AuthLoginActivity extends AppCompatActivity implements Info {
+public class AuthLoginActivity extends AppCompatActivity {
 
     public static Activity context;
     EditText etEmail;
@@ -43,50 +35,38 @@ public class AuthLoginActivity extends AppCompatActivity implements Info {
     String strEtPassword;
     boolean isPassVisible = false;
     private Dialog loadingDialog;
+    String getRole = "";
+    FirebaseLogin firebaseLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        firebaseLogin = new FirebaseLogin();
         context = this;
-
-        etEmail = findViewById(R.id.et_email);
-        etPassword = findViewById(R.id.et_pass);
-
-        loadingDialog = new Dialog(this);
-        DialogUtils.initLoadingDialog(loadingDialog);
-
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            loadingDialog.show();
-            parseUserData();
-        }
+        initViews();
+        getRole();
+        initDialogue();
 
     }
 
-    private void parseUserData() {
-        String uid = Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid();
-        FirebaseDatabase.getInstance().getReference()
-                .child(NODE_USERS)
-                .child(uid)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        loadingDialog.dismiss();
-                        User userModel = snapshot.getValue(User.class);
-                        if (userModel == null) {
-                            Toast.makeText(AuthLoginActivity.this, "Error fetching user data", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        CurrentUserSingleton.setInstance(userModel);
-                        startActivity(new Intent(AuthLoginActivity.this, BuyerDashboard.class));
-                        finish();
-                    }
+    private void setErrorNull() {
+        etEmail.setError(null);
+        etPassword.setError(null);
+    }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
+    private void getRole() {
+        getRole = getIntent().getStringExtra(GET_ROLE);
+    }
 
-                    }
-                });
+    private void initDialogue() {
+        loadingDialog = new Dialog(this);
+        DialogUtils.initLoadingDialog(loadingDialog);
+    }
+
+    private void initViews() {
+        etEmail = findViewById(R.id.et_email);
+        etPassword = findViewById(R.id.et_pass);
     }
 
 
@@ -117,56 +97,39 @@ public class AuthLoginActivity extends AppCompatActivity implements Info {
         return Utils.validEt(etPassword, strEtPassword);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        firebaseLogin = null;
+    }
+
     public void Login(View view) {
         castStrings();
-        if (!isEverythingValid())
+        setErrorNull();
+        if (!Utils.validateEmail(etEmail, strEtEmail)) {
             return;
+        }
+        if (!Utils.validatePassword(etPassword, strEtPassword)) {
+            etPassword.setError("Password can't be empty.");
+            return;
+        }
         loadingDialog.show();
-        initSignIn();
+        switch (getRole) {
+            case FARM_OWNER: {
+                firebaseLogin.authenticateFarmer(context, loadingDialog, strEtEmail, strEtPassword);
+                break;
+            }
+            case BUYER: {
+                firebaseLogin.authenticateBuyer(context, loadingDialog, strEtEmail, strEtPassword);
+                break;
+            }
+            default:
+                showToast("Select Your Role First");
+        }
     }
 
-    private void initSignIn() {
-        loadingDialog.show();
-        FirebaseAuth.getInstance().signInWithEmailAndPassword(strEtEmail, strEtPassword)
-                .addOnCompleteListener(task -> {
-                    Log.i(TAG, "initSignIn: RESPONDED");
-                    loadingDialog.dismiss();
-                    if (task.isSuccessful()) {
-                        initUserData();
-                    } else {
-                        if (task.getException() != null)
-                            Toast.makeText(this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                        else
-                            Toast.makeText(this, "Error occurred", Toast.LENGTH_SHORT).show();
-                        Log.i(TAG, "initSignIn: " + task.getException().getMessage());
-                    }
-                });
-    }
-
-    private void initUserData() {
-        loadingDialog.show();
-        FirebaseDatabase.getInstance().getReference()
-                .child(NODE_USERS)
-                .child(Objects.requireNonNull(FirebaseAuth.getInstance().getCurrentUser()).getUid())
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        loadingDialog.dismiss();
-                        User user = snapshot.getValue(User.class);
-                        if (user == null) {
-                            Toast.makeText(AuthLoginActivity.this, "Error fetching data", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        CurrentUserSingleton.setInstance(user);
-                        startActivity(new Intent(AuthLoginActivity.this, BuyerDashboard.class));
-                        finish();
-
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-
-                    }
-                });
+    private void showToast(String message) {
+        Snackbar.make(this, findViewById(R.id.et_user_name), message, Snackbar.LENGTH_LONG).
+                setTextColor(getResources().getColor(R.color.redish)).show();
     }
 }

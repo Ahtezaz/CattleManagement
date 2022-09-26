@@ -12,7 +12,34 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CattleManagement">
         <activity
-            android:name=".DairyProducts"
+            android:name=".activities.farmer.FeedStockDetailsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.farmer.FeedRecord"
+            android:exported="false" />
+        <activity
+            android:name=".activities.farmer.LiveStockRecordActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.farmer.LiveStockDetailRecord"
+            android:exported="false" />
+        <activity
+            android:name=".activities.farmer.EditAnimalProfile"
+            android:exported="false" />
+        <activity
+            android:name=".activities.farmer.AnimalDetailInfoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.farmer.AddAnimalInfo"
+            android:exported="false" />
+        <activity
+            android:name=".activities.farmer.AddAnimal"
+            android:exported="false" />
+        <activity
+            android:name=".activities.auth.GatewayActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.farmer.AnimalsActivity"
             android:exported="false" />
         <activity
             android:name=".activities.farmer.FarmerDashboard"

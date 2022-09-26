@@ -8,7 +8,6 @@
     tools:context=".activities.farmer.FarmerDashboard">
 
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardView"
         android:layout_width="0dp"
         android:layout_height="250dp"
         android:translationY="-20dp"
@@ -79,13 +78,13 @@
             app:layout_constraintTop_toBottomOf="@id/imageView2">
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/crdAnimal"
                 android:layout_width="0dp"
                 android:layout_height="200dp"
                 android:layout_columnWeight="1"
                 android:layout_marginStart="5dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginEnd="5dp"
-                android:onClick="sellCattle"
                 app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="10dp"
                 app:cardElevation="5dp">
@@ -127,6 +126,7 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardViewLiveStock"
                 android:layout_width="0dp"
                 android:layout_height="200dp"
                 android:layout_columnWeight="1"
@@ -134,7 +134,6 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="5dp"
                 android:layout_marginBottom="20dp"
-                android:onClick="checkMilk"
                 app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="10dp"
                 app:cardElevation="5dp">
@@ -162,7 +161,7 @@
                         android:layout_gravity="center"
                         android:layout_marginHorizontal="15dp"
                         android:layout_marginTop="15dp"
-                        android:text="Dairy products management"
+                        android:text="Live Stock Record"
                         android:textAlignment="center"
                         android:textColor="@color/black"
                         android:textSize="18sp"
@@ -171,6 +170,7 @@
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
+                android:id="@+id/crdFeedAnimal"
                 android:layout_width="0dp"
                 android:layout_height="200dp"
                 android:layout_columnWeight="1"
@@ -178,7 +178,6 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="5dp"
                 android:layout_marginBottom="20dp"
-                android:onClick="feedManagement"
                 app:cardBackgroundColor="@color/white"
                 app:cardCornerRadius="10dp"
                 app:cardElevation="5dp">
@@ -214,49 +213,6 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="0dp"
-                android:layout_height="200dp"
-                android:layout_columnWeight="1"
-                android:layout_marginStart="5dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginEnd="5dp"
-                android:layout_marginBottom="20dp"
-                android:onClick="switchToBuyer"
-                app:cardBackgroundColor="@color/white"
-                app:cardCornerRadius="10dp"
-                app:cardElevation="5dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <com.airbnb.lottie.LottieAnimationView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        app:lottie_autoPlay="true"
-                        app:lottie_enableMergePathsForKitKatAndAbove="true"
-                        app:lottie_imageAssetsFolder="images/"
-                        app:lottie_rawRes="@raw/switch_"
-                        app:lottie_repeatCount="99999"
-                        app:lottie_repeatMode="reverse" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginHorizontal="15dp"
-                        android:layout_marginTop="15dp"
-                        android:text="Switch to buyer"
-                        android:textAlignment="center"
-                        android:textColor="@color/black"
-                        android:textSize="18sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="0dp"
